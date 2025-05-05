@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Specialized;
 using System.Text;
 
 namespace SectorGen2.PlanetGen;
@@ -128,9 +129,62 @@ public class Planet : CelestialBody, ICelestialBody
 
 /// STARPORT
 /// TODO
+      short starport_dm = 0 ;
+
+      if( _population <= 2 ) starport_dm -= 2 ;
+      else if( _population <= 4 ) starport_dm -= 1 ;
+
+      if( _population >= 10 ) starport_dm += 2 ;
+      else if( _population >= 8 ) starport_dm += 1 ;
+
+      _starport = Math.Max(PlanetBuilder.DiceRoll(2, 6, starport_dm).Result, 0) switch
+      {
+        0 or 1 or 2 => 'X',
+        3 or 4      => 'E',
+        5 or 6      => 'D',
+        7 or 8      => 'C',
+        9 or 10     => 'B',
+        _           => 'A',
+      } ;
 
 /// TECH LEVEL
 /// TODO
+      short techlevel_dm = 0 ;
+      short minimum_techlevel = _atmosphere switch
+      {
+        0 or 1 or 10 or 15  => 8,
+        2 or 3 or 13 or 14  => 5,
+        4 or 7 or 9         => 3,
+        11                  => 9,
+        12                  => 10,
+        _                   => 0,
+      } ;
+
+      switch ( _starport )
+      {
+        case 'X': techlevel_dm -= 4 ; break;
+        case 'C': techlevel_dm += 2 ; break;
+        case 'B': techlevel_dm += 4 ; break;
+        case 'A': techlevel_dm += 6 ; break;
+      }
+
+      if( _size <= 1 ) techlevel_dm += 2 ;
+      else if (_size <= 4 ) techlevel_dm += 1 ;
+
+      if( _atmosphere <= 3 || _atmosphere >= 10 ) techlevel_dm += 1 ;
+
+      if( _hydrographics == 0 || _hydrographics == 9 ) techlevel_dm += 1 ;
+      else if ( _hydrographics == 10 ) techlevel_dm += 2 ;
+
+      if( (_population >= 1 && _population <= 5) || _population == 8 ) techlevel_dm += 1 ;
+      else if( _population == 9 ) techlevel_dm += 2 ;
+      else if( _population == 10 ) techlevel_dm += 4 ;
+
+      if( _government == 0 || _government == 5 ) techlevel_dm += 1 ;
+      else if( _government == 7 ) techlevel_dm += 2 ;
+      else if( _government == 13 || _government == 14 ) techlevel_dm -= 2 ;
+
+      _techlevel = (short) Math.Max(PlanetBuilder.DiceRoll(1, 6, techlevel_dm).Result, minimum_techlevel) ;
     }
 
     return this ;
